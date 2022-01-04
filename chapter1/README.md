@@ -2,6 +2,7 @@
 1. ElasticSearch를 사용하는 이유
 2. ElasticSearch 설치, 환경설정
 3. Kibana 설치
+<br>
 
 ### ElasticSearch를 사용하는 이유
 <p>Elasticsearch는 텍스트, 숫자, 위치 기반 정보, 정형 및 비정형 데이터 등 모든 유형의 데이터를 위한 무료 검색 및 분석 엔진으로 분산형 및 개방형을 특징으로 합니다. 
