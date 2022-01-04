@@ -5,10 +5,13 @@
 3. 문서 관리 API
 4. 검색 API
 5. 집계 API
-   <br>
+
+<br>
+<br>
 
 ### 엘라스틱을 구성하는 개념
 
+<br>
 <p>
 엘라스틱서치가 기본적으로 분산 시스템을 지향하다 보니 생소한 용어가 많이 사용되고 있는데, 이러한 엘라스틱서치를 구성하는 주요 구성요소로 어떤 것이 있는 지 다양한 개념들을 먼저 소개해드리겠습니다.
 <br>
@@ -34,18 +37,63 @@
 
 ### 인덱스 관리 API
 
+<br>
 <p>
 <bold>인덱스 생성</bold>
+
+```
+PUT /movies
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 2
+  },
+  "mappings": {
+      "properties": {
+        "movieCd": {"type": "integer"},
+        "movieNm": {"type": "text"},
+        "movieNmEn": {"type": "text"},
+        "prdYear": {"type": "integer"},
+        "openDt": {"type": "date"},
+        "typeNm": {"type": "keyword"},
+        "prdtStatNm": {"type": "keyword"},
+        "nationAlt": {"type": "keyword"},
+        "genreAlt": {"type": "keyword"},
+        "repNationNm": {"type": "keyword"},
+        "repGenreNm": {"type": "keyword"}
+      }
+  }
+}
+```
+
 <br>
-<code>$ curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add - </code></p>
-<br>
-<p>2. sources.list.d 폴더에 Elastic 소스리스트를 추가
-<br>
-<code>$ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list </code> </p>
-<br>
-<p>3. 업데이트 및 설치
-<br>
-<code>$ sudo apt update &&  apt install elasticsearch </code></p>
+<bold>인덱스 삭제</bold>
+
+```
+PUT /movies
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 2
+  },
+  "mappings": {
+      "properties": {
+        "movieCd": {"type": "integer"},
+        "movieNm": {"type": "text"},
+        "movieNmEn": {"type": "text"},
+        "prdYear": {"type": "integer"},
+        "openDt": {"type": "date"},
+        "typeNm": {"type": "keyword"},
+        "prdtStatNm": {"type": "keyword"},
+        "nationAlt": {"type": "keyword"},
+        "genreAlt": {"type": "keyword"},
+        "repNationNm": {"type": "keyword"},
+        "repGenreNm": {"type": "keyword"}
+      }
+  }
+}
+```
+
 <br>
 
 ### ElasticSearch 환경설정
