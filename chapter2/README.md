@@ -7,7 +7,6 @@
 5. 집계 API
 
 <br>
-<br>
 
 ### 엘라스틱을 구성하는 개념
 
@@ -76,68 +75,47 @@ PUT /movies
 <bold>인덱스 삭제</bold>
 
 ```
-PUT /movies
+DELETE /movie
+```
+
+<br>
+
+### 문서 관리 API
+
+<br>
+<p>
+<bold>문서 생성</bold>
+
+```
+POST /movie/_doc/1
 {
-  "settings": {
-    "number_of_shards": 3,
-    "number_of_replicas": 2
-  },
-  "mappings": {
-      "properties": {
-        "movieCd": {"type": "integer"},
-        "movieNm": {"type": "text"},
-        "movieNmEn": {"type": "text"},
-        "prdYear": {"type": "integer"},
-        "openDt": {"type": "date"},
-        "typeNm": {"type": "keyword"},
-        "prdtStatNm": {"type": "keyword"},
-        "nationAlt": {"type": "keyword"},
-        "genreAlt": {"type": "keyword"},
-        "repNationNm": {"type": "keyword"},
-        "repGenreNm": {"type": "keyword"}
-      }
-  }
+  "movieCd": "1",
+  "movieNm": "살아남은 아이",
+  "movieNmEn": "Last Child",
+  "prdYear": "2017",
+  "openDt": "2017-10-20",
+  "typeNm": "장편",
+  "prdtStatNm": "기타",
+  "nationAlt": "한국",
+  "genreAlt": "드라마,가족",
+  "repNationNm": "한국",
+  "repGenreNm": "드라마"
 }
+
+```
+
+<br>
+<bold>문서 조회</bold>
+
+```
+GET /movie/_doc/1
 ```
 
 <br>
-
-### ElasticSearch 환경설정
-
-<bold>환경설정을 위해 elasticsearch.yml 을 수정합니다.</bold>
-
-<hr>
-<ul>
-<li>cluser.name : 클러스터로 여러 노드를 하나로 묶을 수 있는데, 여기서 클러스터명을 지정할 수 있습니다.</li>
-<li>node.name : 엘라스틱 서치 노드명을 설정합니다. 노드명을 지정하지 않으면 엘라스틱서치가 임의의 이름을 자동으로 부여합니다.</li>
-<li>path.data : 엘라스틱서치의 인덱스 경로를 지정합니다. 설정하지 않으면 기본적으로 엘라스틱 서치 하위의 data 디렉토리에 인덱스를 생성합니다.</li>
-<li>path.repo : 엘라스틱서치 인덱스를 백업하기 위한 스냅숏의 경로를 지정합니다. 예제로 제공되는 스냅숏의 경로를 지정합니다.</li>
-</ul>
-<hr><br>
-elasticsearch.yml 은 아래와 같습니다.
+<bold>문서 삭제</bold>
 
 ```
-cluster.name: javacafe-cluster <br>
-node.name: javacafe-node1 <br>
-network.host: 0.0.0.0 <br>
-http.port: 9200 <br>
-transport.tcp.port: 9300 <br>
-node.master: true <br>
-node.data: true <br>
+DELETE /movie/_doc/1
 ```
 
-<br>
-
-### Kibana 설치
-
-<bold>설치과정은 ElasticSearch 7.x 버전을 기준으로 합니다. 버전이 다르면 수행이 다를 수 있습니다.</bold>
-
-<hr>
-<p>1. 업데이트 및 설치
-<br>
-<code>sudo apt-get update && sudo apt-get install kibana</code></p>
-<br>
-<p>2. http://localhost:5601/app/kibana#/dev_tools 로 이동
-<br>
-<img src="./img/result.png">
 <br>
