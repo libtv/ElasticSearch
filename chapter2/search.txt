@@ -1,0 +1,16 @@
+## Parameter 방식
+
+GET /movie/_search?q=장편
+
+---------------------------------------------
+
+## RequestBody 방식
+
+POST /movie/_search
+{
+  "query": {
+    "term": {
+      "typeNm": "장편"
+    }
+  }
+}
