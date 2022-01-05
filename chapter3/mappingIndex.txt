@@ -1,0 +1,41 @@
+## 매핑 인덱스 생성하기
+
+PUT movie_search
+{
+  "settings": {
+    "number_of_shards": 5, 
+    "number_of_replicas": 1
+  },
+  "mappings": {
+      "properties": {
+        "movieCd": {"type": "integer"},
+        "movieNm": {"type": "text", "analyzer": "standard"},
+        "movieNmEn": {"type": "text", "analyzer": "standard"},
+        "prdYear": {"type": "integer"},
+        "openDt": {"type": "date"},
+        "typeNm": {"type": "keyword"},
+        "prdtStatNm": {"type": "keyword"},
+        "nationAlt": {"type": "keyword"},
+        "genreAlt": {"type": "keyword"},
+        "repNationNm": {"type": "keyword"},
+        "repGenreNm": {"type": "keyword"},
+        "companies": {
+          "properties": {
+            "companyCd": {"type": "keyword"},
+            "companyNm": {"type": "keyword"}
+          }
+        },
+        "directors": {
+          "properties": {
+            "peopleNm": {"type": "keyword"}
+          }
+        }
+    }
+  }
+}
+
+-----------------------------------------------------------------
+
+## 매핑 인덱스 조회
+
+GET /movie_search
