@@ -348,7 +348,7 @@ POST /movie_analyzer/_search
 <br>
 <h3>대표적인 분석기</h3>
 엘라스틱서치에서는 루씬에 존재하는 대부분의 분석기를 기본 분석기로 제공합니다. 이 가운데 가장 많이 사용되는 대표적인 분석기를 살펴보겠습니다.
-
+<br>
 <br>
 <ol>
 <li>Standard Analyzer
@@ -364,5 +364,83 @@ POST /_analyze
 
 </li>
 </ol>
+<br>
+<br>
+<li>Whitespace Analyzer
+<br>
 
-</p>
+```
+POST /_analyze
+{
+  "analyzer": "whitespace",
+  "text": "Harray Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+</ol>
+<br>
+<br>
+<li>Keyword Analyzer
+<br>
+
+```
+POST /_analyze
+{
+  "analyzer": "keyword",
+  "text": "Harray Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+</ol>
+<br>
+<br>
+
+<h3>전처리 필터</h3>
+
+<br>
+<ol>
+
+먼저 전처리 필터를 테스트하기 위해 movie_html_analyzer 라는 인덱스를 하나 생성합니다.
+
+```
+PUT /movie_html_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "html_strip_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "char_filter": [
+            "html_strip_char_filter"
+          ]
+        }
+      },
+      "char_filter": {
+        "html_strip_char_filter": {
+          "type": "html_strip",
+          "escaped_tags": ["b"]
+        }
+      }
+    }
+  }
+}
+```
+
+생성된 인덱스에 HTML이 포함된 문장을 입력해서 잘 제거되는지 확인합니다.
+
+```
+POST /movie_html_analyzer/_analyze
+{
+  "analyzer": "html_strip_analyzer",
+  "text": "<span>Harry Potter</span> and the <b>Chamber</b> of Secrets"
+}
+```
+
+</li>
+</ol>
+
+<br>
+<br>
