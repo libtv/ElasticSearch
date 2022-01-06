@@ -767,7 +767,73 @@ POST /movie_syno_analyzer/_analyze
 <br>
 먼저 아래와 같이 동의어 사전을 생성합니다.
 
-<code>/etc/elasticsearch/analysis</code>
+<code>/etc/elasticsearch/analysis/</code> 에 이동하여 <code>touch synonym.txt</code> 를 이용하여 파일을 하나 생성합니다.
+그리고 파일내용은 다음을 넣어보겠습니다.
+
+```
+Elasyicsearch, 엘라스틱서치
+Harry => 해리
+```
+
+동의어를 치환하기 위해 다음 인덱스를 생성해보도록 하겠습니다.
+
+```
+PUT /movie_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "synonym_analyzer": {
+          "tokenizer": "standard",
+          "filter": ["lowercase", "synonym_filter"]
+        }
+      },
+      "filter": {
+        "synonym_filter": {
+          "type": "synonym",
+          "ignore_case": "true",
+          "synonyms_path": "/etc/elasticsearch/analysis/synonym.txt"
+        }
+      }
+    }
+  }
+}
+```
+
+이어서 문장을 테스트해보도록 하겠습니다.
+
+```
+POST /movie_analyzer/_analyze
+{
+  "analyzer": "synonym_analyzer",
+  "text": "elasticsearch Harry Potter"
+}
+```
+
+이번에는 동의어 사전에서 potter 를 포터로 치환하도록 규칙을 추가하였습니다.
+
+```
+Elasyicsearch, 엘라스틱서치
+Harry => 해리
+Potter => 포터
+```
+
+지금 문장을 analyze 로 테스트하면 방금 추가한 규칙이 적용되지 않습니다. 동의어 사전이 변경 될 경우 이를 인식시키기 위해서는 인덱스를 RELOAD 시켜야만 합니다. 리로드 방법은 아래와 같습니다.
+
+```
+POST /movie_analyzer/_close
+POST /movie_analyzer/_open
+```
+
+그리고 다시 쿼리 분석을 시행합니다.
+
+```
+POST /movie_analyzer/_analyze
+{
+  "analyzer": "synonym_analyzer",
+  "text": "elasticsearch Harry Potter"
+}
+```
 
 <br>
 <br>
