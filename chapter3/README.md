@@ -218,3 +218,145 @@ POST reindex_movie/_search
 </ol>
 
 </p>
+<br>
+
+### 엘라스틱서치 분석기
+
+<br>
+<p>
+엘라스틱서치의 분석기는 검색엔진을 처음 접하는 사용자에게는 조금 이해하기 어려운 부분이 있습니다. 특정 단어를 검색했을 떄 결과가 없거나 예기치 않는 결과가 나오면 실제 인덱스의 정보가 어떻게 저장되어 있는지 이해하지 못하고 분석기를 구성했을 경우가 높습니다. 이번에 배울 내용은 분석기를 어떻게 구성하고 사용해야 하는지를 알려드리겠습니다.
+
+<br>
+<br>
+<bold>텍스트 분석 개요</bold>
+<br>
+일반적으로 특정 단어가 포함된 문서를 찾으려면 검색어로 찾을 단어를 입력하면 될 것이라 생각할 것입니다. 하지만 엘라스틱서치는 텍스트를 처리하기 위해 기본적으로 분석기를 사용하기 때문에 생각대로 동작하지 않습니다. 다음 예제를 통해 확인해보세요.
+
+```
+POST _analyze
+{
+  "analyzer": "standard",
+  "text": "우리나라가 좋은나라, 대한민국 화이팅"
+}
+```
+
+<br>
+<br>
+<bold>분석기의 구조</bold>
+<br>
+분석기는 기본적으로 다음과 같은 프로세스로 동작합니다.
+
+<br>
+<ol>
+<li>1. 문장을 특정한 규칙에 의해 수정한다 : CHARACTER FILTER</li>
+<li>2. 수정한 문장을 개별 토큰으로 분리한다 : TOKENIZER FILTER</li>
+<li>3. 개별 토큰을 특정한 규칙에 의해 변경한다 : TOKEN FILTER</li>
+</ol>
+
+<br>
+<br>
+<bold>분석기 사용법</bold>
+<br>
+엘라스틱서치는 루씬에 존재하는 기본 분석기를 별도의 정의 없이 사용할 수 있게 미리 정의해서 제공합니다. 루씬의 Standardd Analyzer 분석기를 사용하기 위해 엘라스틱서치에서는 _analyze API를 제공합니다.
+
+<br>
+<ol>
+<li>분석기를 이용한 분석 : 형태소가 어떻게 분석되는지 확인할 수 있습니다.
+
+```
+POST _analyze
+{
+  "analyzer": "standard",
+  "text": "캐리비안의 해적"
+}
+```
+
+</il>
+
+<li>색인과 검색 시 분석기를 각각 설정 : 분석기는 색인할 때 사용되는 Index Analyzer와 검색할 때 사용할 때 사용되는 Search Analyzer 로 구분해서 구성할 수 있습니다.
+먼저 인덱스를 생성하는데, movie_lower_test_analyzer 라는 분석기와 movie_stop_test_analyzer 라는 분석기를 정의하였습니다.
+
+```
+PUT movie_analyzer
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "movie_lower_test_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        },
+        "movie_stop_test_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "movie_stop_test_analyzer",
+        "search_analyzer": "movie_lower_test_analyzer"
+      }
+    }
+  }
+}
+```
+
+인덱스의 생성이 완료되면 다음 문서를 색인해보도록 하겠습니다.
+
+```
+PUT movie_analyzer/_doc/1
+{
+  "title": "Harry Potter and the Chamber of Secrets"
+}
+```
+
+검색도 해보겠습니다.
+
+```
+POST /movie_analyzer/_search
+{
+  "query": {
+    "query_string": {
+      "default_operator": "AND",
+      "query": "Chamber of Secrets"
+    }
+  }
+}
+```
+
+</il>
+</ol>
+
+<br>
+<br>
+<bold>대표적인 분석기</bold>
+<br>
+엘라스틱서치에서는 루씬에 존재하는 대부분의 분석기를 기본 분석기로 제공합니다. 이 가운데 가장 많이 사용되는 대표적인 분석기를 살펴보겠습니다.
+
+<br>
+<ol>
+<li>Standard Analyzer
+
+</li>
+</ol>
+
+</p>
