@@ -244,6 +244,7 @@ POST _analyze
 <br>
 <bold>분석기의 구조</bold>
 <br>
+<br>
 분석기는 기본적으로 다음과 같은 프로세스로 동작합니다.
 
 <br>
@@ -257,8 +258,10 @@ POST _analyze
 <br>
 <bold>분석기 사용법</bold>
 <br>
+<br>
 엘라스틱서치는 루씬에 존재하는 기본 분석기를 별도의 정의 없이 사용할 수 있게 미리 정의해서 제공합니다. 루씬의 Standardd Analyzer 분석기를 사용하기 위해 엘라스틱서치에서는 _analyze API를 제공합니다.
 
+<br>
 <br>
 <ol>
 <li>분석기를 이용한 분석 : 형태소가 어떻게 분석되는지 확인할 수 있습니다.
@@ -272,7 +275,8 @@ POST _analyze
 ```
 
 </il>
-
+<br>
+<br>
 <li>색인과 검색 시 분석기를 각각 설정 : 분석기는 색인할 때 사용되는 Index Analyzer와 검색할 때 사용할 때 사용되는 Search Analyzer 로 구분해서 구성할 수 있습니다.
 먼저 인덱스를 생성하는데, movie_lower_test_analyzer 라는 분석기와 movie_stop_test_analyzer 라는 분석기를 정의하였습니다.
 
@@ -348,7 +352,8 @@ POST /movie_analyzer/_search
 
 <br>
 <br>
-<bold>대표적인 분석기</bold>
+<h2>대표적인 분석기</h2>
+<br>
 <br>
 엘라스틱서치에서는 루씬에 존재하는 대부분의 분석기를 기본 분석기로 제공합니다. 이 가운데 가장 많이 사용되는 대표적인 분석기를 살펴보겠습니다.
 
