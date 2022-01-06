@@ -429,6 +429,9 @@ PUT /movie_html_analyzer
 }
 ```
 
+<br>
+<br>
+
 생성된 인덱스에 HTML이 포함된 문장을 입력해서 잘 제거되는지 확인합니다.
 
 ```
@@ -444,3 +447,314 @@ POST /movie_html_analyzer/_analyze
 
 <br>
 <br>
+
+<h3>토크나이저 필터</h3>
+
+<br>
+<ol>
+
+전처리 필터를 거쳐 토크나이저 필터로 문서가 넘어오면 해당 텍스트는 Tokenizer 의 특성에 맞게 적절히 분해됩니다. 다음은 엘라스틱서치에서 제공하는 대표적인 토크나이저의 예시입니다.
+
+<li> Standard 토크나이저 : 대부분의 기호를 만나면 토큰으로 나뉩니다.
+
+```
+POST /movie_analyzer/_analyze
+{
+  "tokenizer": "standard",
+  "text": "Harry Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Whitespace 토크나이저 : 공백을 만나면 테스트를 토큰화합니다.
+
+```
+POST /movie_analyzer/_analyze
+{
+  "tokenizer": "whitespace",
+  "text": "Harry Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Ngram 토크나이저 : 특정 문자를 지정하거나 최소 길이 및 최대 길이를 설정하여 토큰을 분리합니다.
+
+Ngram 토크나이저를 테스트하기위해 다음과 같은 인덱스를 하나 생성하도록 하겠습니다.
+
+```
+PUT /movie_ngram_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "ngram_analyzer": {
+          "tokenizer": "ngram_tokenizer"
+        }
+      },
+      "tokenizer": {
+        "ngram_tokenizer": {
+          "type": "ngram",
+          "min_gram": 3,
+          "max_gram": 3,
+          "token_chars": ["letter"]
+        }
+      }
+    }
+  }
+}
+```
+
+다음은 Ngram 토크나이저를 이용해 문장을 분리한 예시입니다.
+
+```
+POST /movie_ngram_analyzer/_analyze
+{
+  "analyzer": "ngram_analyzer",
+  "text": "Harry Potter and Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Edge Ngram 토크나이저 : 지정된 문자의 목록 중 하나를 만날 때 마다 시작 부분을 고정시켜 단어를 자르는 방식입니다.
+
+Edge Ngram 토크나이저를 테스트하기위해 다음과 같은 인덱스를 하나 생성하도록 하겠습니다.
+
+```
+PUT /movie_engram_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "edge_ngram_analyzer": {
+          "tokenizer": "edge_ngram_tokenizer"
+        }
+      },
+      "tokenizer": {
+        "edge_ngram_tokenizer": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 10,
+          "token_chars": ["letter"]
+        }
+      }
+    }
+  }
+}
+```
+
+다음은 Ngram 토크나이저를 이용해 문장을 분리한 예시입니다.
+
+```
+POST /movie_ngram_analyzer/_analyze
+{
+  "analyzer": "ngram_analyzer",
+  "text": "Harry Potter and Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> keyword 토크나이저 : 텍스트를 하나의 토큰으로 만듭니다.
+
+다음은 keyword 토크나이저를 이용해 문장을 분리합니다.
+
+```
+POST /movie_analyzer/_analyze
+{
+  "tokenizer": "keyword",
+  "text": "Harry Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+</ol>
+
+<br>
+<br>
+
+<h3>토큰 필터</h3>
+
+<br>
+<ol>
+
+토크나이저에서 분리된 토큰들을 변형하거나 추가, 삭제할 떄 사용되는 필터입니다. 분리된 토큰은 배열형태로 토큰 필터로 전달됩니다.
+
+<li> Ascii Folding 토큰 필터 : ASCII 코드에 해당하는 127개의 알파벳, 숫자, 기호에 해당하지 않는 경우 문자를 ASCII 요소로 변환해줍니다.
+
+```
+POST /movie_af_analyzer/_analyze
+{
+  "analyzer": "asciifolding_analyzer",
+  "text": "hello javacĭfe"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Lowercase 토큰 필터 : 토큰을 구성하는 전체 문자열을 소문자로 변환합니다.
+
+Lowercase 토큰 필터를 테스트하기 위해 다음과 같이 movie_lower_analyzer 라는 인덱스를 하나 생성합니다.
+
+```
+PUT /movie_lower_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "lowercase_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase"]
+        }
+      }
+    }
+  }
+}
+```
+
+다음은 Lowercase 토큰 필터를 이용해 토큰을 변경한 예시입니다.
+
+```
+POST /movie_lower_analyzer/_analyze
+{
+  "analyzer": "lowercase_analyzer",
+  "text": "Harry Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Uppercased 토큰 필터 : 토큰을 구성하는 전체 문자열을 대문자로 변환합니다.
+
+Uppercase 토큰 필터를 테스트하기 위해 다음과 같이 movie_upper_analyzer 라는 인덱스를 하나 생성합니다.
+
+```
+PUT /movie_upper_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "uppercase_analyzer": {
+          "tokenizer": "standard",
+          "filter": ["uppercase"]
+        }
+      }
+    }
+  }
+}
+```
+
+다음은 Uppercase 토큰 필터를 이용해 토큰을 변경한 예시입니다.
+
+```
+POST /movie_upper_analyzer/_analyze
+{
+  "analyzer": "uppercase_analyzer",
+  "text": "Harry Potter and Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Stop 토큰 필터 : 불용어로 등록할 사전을 구축해서 사용하는 필터를 의미합니다. 인덱스를 만들고 싶지 않거나, 검색되지 않게 하고 싶은 단어를 등록해서 해당 단어에 대한 불용어 사전을 구축합니다.
+
+Stop 토큰 필터를 테스트하기 위해 다음과 같이 movie_stop_analyzer 라는 인덱스를 하나 생성합니다.
+
+```
+PUT /movie_stop_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "stop_filter_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["stop_filter"]
+        }
+      },
+      "filter": {
+        "stop_filter": {
+          "type": "stop",
+          "stopwords": ["and", "is", "the"]
+        }
+      }
+    }
+  }
+}
+```
+
+다음은 Uppercase 토큰 필터를 이용해 토큰을 변경한 예시입니다.
+
+```
+POST /movie_stop_analyzer/_analyze
+{
+  "analyzer": "stop_filter_analyzer",
+  "text": "Harry Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Synonym 토큰 필터 : 동의어를 처리할 수 있는 필터입니다.
+
+Synonym 토큰 필터를 테스트하기 위해 다음과 같이 movie_syno_analyzer 라는 인덱스를 하나 생성합니다.
+
+```
+PUT /movie_syno_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "synonym_analyzer": {
+          "type": "custom",
+          "tokenizer": "whitespace",
+          "filter": ["synonym_filter"]
+        }
+      },
+      "filter": {
+        "synonym_filter": {
+          "type": "synonym",
+          "synonyms": ["Harryy => 해리"]
+        }
+      }
+    }
+  }
+}
+```
+
+다음은 Synonym 토큰 필터를 이용해 토큰을 변경한 예시입니다.
+
+```
+POST /movie_syno_analyzer/_analyze
+{
+  "analyzer": "synonym_analyzer",
+  "text": "Harryy Potter and the Chamber of Secrets"
+}
+```
+
+</li>
+<br>
+<br>
+
+<li> Trim 토큰 필터 : 앞뒤 공백을 제거하는 토큰 필터입니다.</li>
+
+</ol>
