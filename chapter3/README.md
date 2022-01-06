@@ -352,6 +352,15 @@ POST /movie_analyzer/_search
 <br>
 <ol>
 <li>Standard Analyzer
+<br>
+
+```
+POST /_analyze
+{
+  "analyzer": "standard",
+  "text": "Harray Potter and the Chamber of Secrets"
+}
+```
 
 </li>
 </ol>
