@@ -363,7 +363,7 @@ POST /_analyze
 ```
 
 </li>
-</ol>
+
 <br>
 <br>
 <li>Whitespace Analyzer
@@ -378,7 +378,7 @@ POST /_analyze
 ```
 
 </li>
-</ol>
+
 <br>
 <br>
 <li>Keyword Analyzer
