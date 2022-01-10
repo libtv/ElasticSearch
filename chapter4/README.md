@@ -459,7 +459,132 @@ POST /movie_search/_search
 }
 ```
 
+아래 예시를 들어보겠습니다. 대표 장르가 "코미디" 이고, 제작 국가에 "한국"이 포함되어 있으며, 영화 타입 중 "단편" 이 제외된 문서만을 검색합니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "repGenreNm": "코미디"
+          }
+        },
+        {
+          "match": {
+            "repNationNm": {
+              "query": "한국"
+            }
+          }
+        }
+      ],
+      "must_not": [
+        {"match": {
+          "typeNm": "단편"
+        }}
+      ]
+    }
+  }
+}
+```
+
 <br>
+
+Prefix Query : 해당 접두어가 있는 모든 문서를 검색하는 데 사용합니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "prefix": {
+      "movieNm": {
+        "value": "자전차"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+Wildcard Query :검색어가 와일드카드와 일치하는 구문을 찾습니다. 이때 입력된 검색어는 형태소 분석이 이뤄지지 않습니다
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "wildcard": {
+      "typeNm": {
+        "value": "장?"
+      }
+    }
+  }
+}
+```
+
+<br>
+<br>
+
+#### 부가적인 검색 API
+
+<br>
+<p>
+엘라스틱서치에서 제공되는 검색 API 에는 부가적인 기능들도 다수 제공합니다. 이를 이용해 검색 결과의 카운트만 요청한다거나 검색을 요청하기 전에 쿼리 문법 오류를 미리 체크해 볼 수도 있습니다. 좀 더 효율적인 검색을 위해 튜닝을 수행하거나 검색 결과의 score 계산식을 디버깅하는 것도 가능합니다.
+</p>
+
+<br>
+
+Count API : 검색된 문서의 개수를 출력합니다.
+
+```
+POST /movie_search/_count
+{
+  "query": {
+    "wildcard": {
+      "typeNm": {
+        "value": "장?"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+Validate API : 쿼리가 유효하게 작성됐는지 검증하는 API 입니다.
+
+```
+POST /movie_search/_validate/query
+{
+  "query": {
+    "wildcard": {
+      "typeNm": {
+        "value": "장?"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+Profile API : 쿼리에 대한 상세한 수행 계획과 각 수행 계획별로 수행된 시간을 돌려주므로 성능을 튜닝하거나 디버깅 할 때 유용하게 사용할 수 있습니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "wildcard": {
+      "typeNm": {
+        "value": "장?"
+      }
+    }
+  },
+  "profile": true
+}
+```
 
 <br>
 <br>
