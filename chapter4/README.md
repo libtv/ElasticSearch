@@ -39,7 +39,6 @@ POST /_snapshot/javacafe/movie-search/_restore
 </p>
 
 <br>
-<br>
 
 #### URI 검색
 
@@ -52,18 +51,136 @@ URI 검색 방식은 HTTP GET 요청을 활용하는 방식으로 파라미터�
 GET /movie_search/_search?q=movieNmEn:Family
 ```
 
-<br>
+다음은 다양한 필드를 검색 조건으로 추가해서 검색을 요청하는 예시입니다.
+
+```
+GET /movie_search/_search?q=movieNmEn:* AND prdtYear:2017&analyze_wildcard=true&from=0&size=5&&sort=_score:desc,movieCd:asc&_source_includes=movieCd,movieNm,mvoieNnmmEn,typeNm
+```
+
 <br>
 
 #### Request Body 검색
 
 <br>
 <p>
-URI 검색 방식은 HTTP GET 요청을 활용하는 방식으로 파라미터를 key value 형태로 전달하는 방식입니다. Request Body 검색에 비해 단순하고 사용하기 편리하지만 복잡한 질의문을 입력하기 힘들다는 단점이 있으며, 엘라스틱서치에서 제공하는 모든 검색 옵션을 사용할 수 없다는 제약이 있습니다. 다음은 MovieNmEn 필드에 "Family" 가 포함된 문서를 검색하는 예시입니다.
+Request Body 방식은 HTTP 요청 시 Body 에 검색할 칼럼과 검색어를 JSON 형태로 표현해서 전달하는 방식입니다. 다음은 MovieNmEn 필드에 "Family" 가 포함된 문서를 검색하는 예시입니다.
 </p>
 
 ```
-GET /movie_search/_search?q=movieNmEn:Family
+POST /movie_search/_search
+{
+  "query": {
+    "query_string": {
+      "default_field": "movieNmEn",
+      "query": "Family"
+    }
+  }
+}
+```
+
+다음은 다양한 필드를 검색 조건으로 추가해서 검색을 요청하는 예시입니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "query_string": {
+      "default_field": "movieNmEn",
+      "query": "movieNmEn:* OR prdtYear:2017"
+    }
+  },
+  "from": 0,
+  "size": 5,
+  "sort": [
+    {
+      "_score": {
+        "order": "desc"
+      },
+      "movieCd": {
+        "order": "asc"
+      }
+    }
+  ],
+  "_source": [
+    "movieCd",
+    "movieNm",
+    "movieNmEn",
+    "typeNm"
+    ]
+}
+```
+
+<br>
+<br>
+
+### Query DSL 이해하기
+
+<br>
+<p>
+엘라스틱서치로 검색 질의를 요청할 때 Request Body 검색과 URI 검색 모두 _search API 를 이용해 검색을 질의합니다. 하지만 Query DSL 을 이용하면 여러 개의 질의를 조합하거나 질의 결과에 대해 다시 검색을 수행하는 등 기존의 검색보다 강력한 검색이 가능해집니다. 
+</p>
+
+<br>
+
+#### Query DSL 쿼리의 구조
+
+<br>
+<p>
+Query DSL로 쿼리를 작성하려면 미리 정의된 문법에 따라 JSON 구조를 작성해야 합니다. 기본적인 요청을 위한 구조는 다음과 같습니다.
+</p>
+
+```
+{
+  "size": // 리턴받는 결과의 개수를 지정합니다. 기본 값은 10
+  "from": // 몇번째 문서부터 가져올지 지정합니다.
+  "timeout": // 검색을 요청해서 결과를 받는데 까지 걸리는 시간을 나타냅니다.
+  "_source": // 검색 시  필요한 필드만 출력하고 싶을 때 사용합니다.
+  "query": // 검색 조건문이 들어가는 공간입니다.
+  "aggs": // 통계 및 집계데이터를 사용할 때 사용한느 공간입니다.
+  "sort": // 검색 결과에 대한 출력 조건을 나타냅니다.
+}
+```
+
+<br>
+
+#### Query DSL 쿼리와 필터
+
+<br>
+<p>
+질의할 때 실제 분석기에 의한 전문 분석이 필요한 경우 쿼리 컨텍스트를 이용하고, 단순히 Yes/No 로 판단할 수 있는 조건일 때에는 필터 컨텍스트를 이용합니다.
+</p>
+
+다음은 쿼리 컨텍스트 예제로써 "기묘한 가족"이라는 문장을 대상을로 형태소 분석을 수행하여 movieNm 필드를 검색해보도록 하겠습니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "match": {
+      "movieNm": "기묘한 가족"
+    }
+  }
+}
+```
+
+다음은 필터 컨텍스트 예제로써 "다큐멘터리" 인 문서만 필터링해서 검색해보도록 하겠습니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match_all": {}}
+      ],
+      "filter": [
+        {"term": {
+          "repGenreNm": "다큐멘터리"
+        }}
+      ]
+    }
+  }
+}ㅍ
 ```
 
 <br>
