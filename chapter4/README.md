@@ -17,7 +17,7 @@
 GET /_snapshot/javacafe/_all
 ```
 
-을 통해 스냅숏이 존재하는 지 확인한 후 스냅샷이 존재하면 스냅샷을 복구합니다. 복구 명령어는 아래와 같습니다.
+을 통해 스냅숏이 존재하는 지 확인한 후 스냅샷이 존재하면 스냅샷을 복구합니다. 복구 명령어는 아래와 같습니다. <br>
 
 ```
 POST /_snapshot/javacafe/movie-search/_restore
