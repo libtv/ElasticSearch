@@ -184,7 +184,7 @@ POST /movie_search/_search
       ]
     }
   }
-}ㅍ
+}
 ```
 
 <br>
@@ -239,6 +239,227 @@ POST /movie_search/_search
   }
 }
 ```
+
+<br>
+
+쿼리 결과 정렬 : 엘라스틱서치가 기본적으로 계산한 유사도에 의한 스코어 값으로 정렬하는 것이 아니라 필드의 이름이나 가격, 날짜 등을 기준을로 재정렬하고 싶은 경우가 있습니다. 이럴 때 사용합니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "term": {
+      "repNationNm": "한국"
+    }
+  },
+  "sort": [
+    {
+      "prdtYear": {
+        "order": "asc"
+      }
+    }
+  ]
+}
+```
+
+<br>
+
+필드 필터링 : 특정 필드를 검색 결과에서만 보고 싶은 경우에 사용합니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "term": {
+      "repNationNm": "한국"
+    }
+  },
+  "_source": [
+    "movieNm"
+    ]
+}
+```
+
+<br>
+
+범위 : 지정한 값이 아닌 범위를 기준을로 질의해야 하는 경우에 사용합니다.
+
+<ul>
+<li>lt : 피연산자보다 작음 </li>
+<li>gt : 피연산자보다 큼 </li>
+<li>lte : 피연산자보다 작거나 같음 </li>
+<li>gte : 피연산자보다 크거나 같음 </li>
+</ul>
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "range": {
+      "prdtYear": {
+        "gte": "2016",
+        "lte": "2017"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+operator 설정 : 엘라스틱서치는 검색 시 기본적으로 OR 연산을 합니다. 하지만 AND 연산으로 사용해 정확도를 높여야 할 경우에 대해 알아보겠습니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "match": {
+      "movieNm": {
+        "query": "자전차왕 엄복동",
+        "operator": "and"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+minimum_should_match 설정 : operator 파라미터를 이용해 OR 옵션으로 동작할 경우 텀의 개수가 일정 개수 이상 매칭될 때만 결과ㅏ로 나오게 하는 파라미터입니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "match": {
+      "movieNm": {
+        "query": "Highb and Lows",
+        "fuzziness": 1,
+        "operator": "and"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+boost 설정 : 관련성이 높은 필드나 키워드에 가중치를 더 줄 수 있게 하는 파라미터입니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Fly",
+      "fields": ["movieNm^3", "movieNmEn"]
+    }
+  }
+}
+```
+
+<br>
+<br>
+
+#### Query DSL의 주요 쿼리
+
+<br>
+<p>
+엘라스틱서치에서 제공하는 검색 관련 기능은 Query DSL 을 이용해 모두 활용할 수 있습니다. 이번 절에서는 Query DSL 의 주요 쿼리에 대해 알아보도록 하겠습니다.
+</p>
+
+<br>
+
+Match All Query : match_all 파라미터를 해당 쿼리는 색인에 모든 문서를 검색하는 쿼리입니다. 가장 단순한 쿼리로써 일반적으로 색인에 저장된 모든 문서를 확인할 때 사용합니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "match_all": {}
+  },
+  "size": 100
+}
+```
+
+<br>
+
+Match Query : 텍스트, 숫자, 날짜 등이 포함된 문장을 형태소 분석을 통해 텀으로 분리한 후 이 텀을 이용해 검색 질의를 수행합니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "match": {
+      "movieNm": {
+        "query": "그대 장미",
+        "operator": "and"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+Multi Match Query : Match Query 와 기본적으로 방법은 동일하지만 여러 개의 필드를 대상으로 검색할 때 사용하는 쿼리입니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "가족",
+      "fields": ["movieNm^3", "movieNmEn"]
+    }
+  }
+}
+```
+
+<br>
+
+Term Query : 이전에 알아본 Match Query는 쿼리를 수행하기 전에 먼저 분석기를 통해 텍스트를 분석 한 후 검색을 수행하지만 Term Query 는 별도 분석 작업을 수행하지 않고 입력된 텍스트가 존재하는 문서를 찾습니다. 따라서 Keyword 타입을 사용하는 필드를 검색하기 위해서는 Term Query를 이용하는 것이 좋습니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "term": {
+      "genreAlt": "코미디"
+    }
+  }
+}
+```
+
+<br>
+
+Bool Query : 관계형 데이터베이스에서는 AND, OR 로 묶은 여러 조건을 Where 절에서 사용할 수 있습니다. 이처럼 엘라스틱 서치에서도 하나의 쿼리나 여러 개의 쿼리를 조합해서 더 높은 스코어를 가진 쿼리 조건으로 검색을 수행할 수 있습니다. 이러한 유형의 쿼리를 Compound Query 라고 하는데, 엘라스틱서치에서는 Bool Query 로 제공합니다.
+
+기본적으로 다음과 같은 구조로 Bool Query 를 표현할 수 있습니다.
+
+```
+POST /movie_search/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {} // 반드시 조건에 만족하는 문서만 검색된다
+      ],
+      "must_not": [
+        {} // 조건을 만족하지 않는 문서가 검색된다
+      ],
+      "should": [
+        {} // 여러 조건 중 하나 이상을 만족하는 문서가 검색된다
+      ],
+      "filter": [
+        {} // 조건을 포함하고 있는 문서를 출력한다. 해당 파라미터를 사용하면 스코어별로 정렬되지는 않는다.
+      ]
+    }
+  }
+}
+```
+
+<br>
 
 <br>
 <br>
