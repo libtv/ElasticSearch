@@ -185,3 +185,54 @@ POST /movie_search/_search
 
 <br>
 <br>
+
+#### Query DSL의 주요 파라미터
+
+<br>
+<p>
+Query DSL 은 다양한 파라미터를 옵션으로 제공합니다. 쿼리를 작성할 때 공통적으로 제공되는 파라미터로 어떤 것들이 있는지 알아보도록 하겠습니다.
+</p>
+
+Multi Index 검색 : 다수의 인덱스를 검색해야 할 때도 한번의 요청으로 검색 결과를 얻을 수 있습니다. 검색 요청 씨 "," 혹은 "\*" 등 와일드카드를 이용해 다수 인덱스 명을 입력할 수 있습니다.
+
+```
+POST /movie_search,movie_auto/_search
+{
+  "query": {
+    "term": {
+      "repGenreNm": "다큐멘터리"
+    }
+  }
+}
+```
+
+쿼리 결과 페이징 : 웹상에서 가장 많이 사용하는 페이징으로써 문서의 시작을 나타내는 from 파라미터와 문서의 개수를 나타내는 size 파라미터를 사용합니다.
+
+```
+# search and view the first page
+POST /movie_search/_search
+{
+  "from": 0,
+  "size": 5,
+  "query": {
+    "term": {
+      "repNationNm": "한국"
+    }
+  }
+}
+
+# search and view the secnod page
+POST /movie_search/_search
+{
+  "from": 5,
+  "size": 5,
+  "query": {
+    "term": {
+      "repNationNm": "한국"
+    }
+  }
+}
+```
+
+<br>
+<br>
