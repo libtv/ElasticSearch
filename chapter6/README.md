@@ -412,6 +412,53 @@ POST /movie_script/_doc/1/_update
 ```
 
 <br>
+
+### 필드 제거
+
+필드를 삭제할 때는 <code>ctx.\_source.remove('fieldName')</code> 와 같은 문법을 사용합니다.
+
+```
+POST /movie_script/_doc/1/_update
+{
+  "script": "ctx._source.movieList.remove('Suits')"
+}
+```
+
+<br>
+
+## 검색 템플릿을 이용한 동적 쿼리 제공
+
+<p>
+검색 템플릿이란 검색 로직을 템플릿으로 저장하고 활용하고, 검색의 요구사항이 변경될 때 템플릿으로부터 기존 쿼리를 수정하고 새 쿼리를 작성할 수 있는 기능입니다.
+</p>
+
+<br>
+
+script API 를 이용하여 검색 템플릿을 작성합니다. 아래 예시에서는 movieNm 필드에 매칭된 데이터를 검색하는 쿼리가 수행되는 템플릿입니다. mustache 라는 템플릿 엔진을 사용하도록 하겠습니다.
+
+```
+POST /movie_search/_search/template
+{
+  "id": "movie_search_example_tamplate",
+  "params": {
+    "movie_name": "곤지암"
+  }
+}
+```
+
+<br>
+
+### 필드 추가
+
+update API 를 이용하여 필드를 추가하고, 필드를 추가할 때 <code>ctx.\_source.[filedName] = ""</code> 문법을 이용하면 색인된 문서에 접근할 수 있습니다.
+
+```
+POST /movie_script/_doc/1/_update
+{
+  "script": "ctx._source.movieList.Bblack_Panther = 3.7"
+}
+```
+
 <br>
 
 ### 필드 제거
@@ -427,4 +474,51 @@ POST /movie_script/_doc/1/_update
 
 <br>
 
-## 스크립트를 이용해 동적으로 필드 추가하기
+## 별칭을 이용해 항상 최신 인덱스 유지하기
+
+<p>
+인덱스를 생성할 때 별칭을 사용해 인덱스가 추가되거나 삭제될 경우 새로운 인덱스로 사용자 요청이 자유롭게 이동할 수 있도록 alias 기능을 지원합니다. 또한 인덱스의 별칭을 이용하게 되면 두 개 이상의 인덱스를 검색해야 할 때 한번의 요청만으로도 검색되도록 만들기도 쉽습니다.
+</p>
+
+<br>
+
+먼저 reindexAPI 를 이용하여 movie_info 인덱스를 생성해보도록 하겠습니다.
+
+```
+POST /_reindex
+{
+  "source": {
+    "index": "movie_search"
+  },
+  "dest": {
+    "index": "movie_info"
+  }
+}
+```
+
+<br>
+
+movie_info 인덱스와 movie_search 인덱스를 서로 합쳐 하나의 별칭인 movie_alias 로 만들어보겠습니다.
+
+```
+POST /_aliases
+{
+  "actions": [
+    {
+      "add": {
+        "index": "movie_info",
+        "alias": "movie_alias"
+      }
+    },
+    {
+      "add": {
+        "index": "movie_search",
+        "alias": "movie_alias"
+      }
+    }
+  ]
+}
+
+```
+
+<br>
