@@ -210,3 +210,240 @@ stoptags 에서 사용한 파라미터 값들의 대한 설명은 공식 문서�
 
 <br>
 <br>
+
+#### nori_readingform 토큰 필터
+
+<br>
+<p>
+해당 토큰 필터는 문서에 존재하는 한자를 한글로 변경하는 역할을 하는 필터입니다.
+</p>
+
+<br>
+<br>
+
+#### nori 한글 형태소 분석기 최종
+
+<br>
+<p>
+위의 토크나이저와 필터를 적용한 인덱스 생성은 아래와 같습니다.
+</p>
+
+```
+PUT /nori_full_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "korean_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_token_analyzer",
+          "filter": [
+            "nori_part_filter",
+            "nori_readingform",
+            "lowercase"
+          ]
+        }
+      },
+      "tokenizer": {
+        "nori_token_analyzer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed",
+          "user_dictionary": "/etc/elasticsearch/analysis/userdic_ko.txt"
+        }
+      },
+      "filter": {
+        "nori_part_filter": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "E",
+            "IC",
+            "J",
+            "MAG",
+            "MAJ",
+            "MM",
+            "NA",
+            "NR",
+            "SC",
+            "SE",
+            "SF",
+            "SH",
+            "SL",
+            "SN",
+            "SP",
+            "SSC",
+            "SSO",
+            "SY",
+            "UNA",
+            "UNKNOWN",
+            "VA",
+            "VCN",
+            "VCP",
+            "VSV",
+            "VV",
+            "VX",
+            "XPN",
+            "XR",
+            "XSA",
+            "XSN",
+            "XSV"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+<br>
+
+사용방법은 아래와 같습니다.
+
+```
+POST /nori_full_analyzer/_analyze
+{
+  "analyzer": "korean_analyzer",
+  "text": "그대 이름은 장미 會計"
+}
+```
+
+<br>
+
+## 검색 결과 하이라이트 하기
+
+<br>
+<p>
+하이라이트는 문서 검색 결과를 웹상에서 출력할 때 사용자가 입력한 검색어를 강조하는 기능입니다. 이 기능올ㄹ 통해 사용자는 자신이 입력한 키워드가 문서의 어느 부분과 일치하는 지 시각적으로 손쉽게 확인할 수 있습니다. 다음 에제를 통해 먼저 인덱스를 하나 생성합니다.
+</p>
+
+```
+PUT /movie_highlighting
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+그리고 데이터를 하나 생성해보도록 하겠습니다.
+
+```
+POST /movie_highlighting/_doc/1
+{
+  "title": "Harry Potter and the Deathly Hallows"
+}
+```
+
+<br>
+
+데이터를 검색할 때 highlight 옵션을 이용하여 하이라이트를 수행할 필드를 지정하면 검색결과로 하이라이트 된 데이터의 일부와 함꼐 리턴됩니다.
+
+```
+POST /movie_highlighting/_search
+{
+  "query": {
+    "match": {
+      "title": "harry"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "title": {}
+    }
+  }
+}
+```
+
+<br>
+
+하이라이트의 태그의 기본값은 <em> 태그로 확인하실 수 있을 것입니다. 기본 값을 변경하기 위해서는 옵션 내부에 pre_tags와 post_tags 를 사용하여 정의하면 됩니다. 아래는 해당 예제입니다.
+
+```
+POST /movie_highlighting/_search
+{
+  "query": {
+    "match": {
+      "title": "harry"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "title": {}
+    },
+    "pre_tags": "<strong>",
+    "post_tags": "</strong>"
+  }
+}
+```
+
+<br>
+
+## 스크립트를 이용해 동적으로 필드 추가하기
+
+<br>
+<p>
+엘라스틱서치는 스크립트를 이용하여 사용자가 특정 로직을 삽입하는 것이 가능합니다. 최신 엘라스틱서치에서는 스크립팅 전용 언어인 페인리스가 도입되어 편리하게 사용할 수 있습니다.
+</p>
+
+<br>
+<br>
+
+### 테스트 문서 색인
+
+<br>
+
+예제를 위해 인덱스의 문서를 색인하여 생성하도록 하겠습니다.
+
+```
+PUT /movie_script/_doc/1
+{
+  "movieList": {
+    "Death_WIsh": 5.5,
+    "About_Time": 7,
+    "Suits": 3.5
+  }
+}
+```
+
+<br>
+
+### 필드 추가
+
+<br>
+
+update API 를 이용하여 필드를 추가하고, 필드를 추가할 때 <code>ctx.\_source.[filedName] = ""</code> 문법을 이용하면 색인된 문서에 접근할 수 있습니다.
+
+```
+POST /movie_script/_doc/1/_update
+{
+  "script": "ctx._source.movieList.Bblack_Panther = 3.7"
+}
+```
+
+<br>
+<br>
+
+### 필드 제거
+
+<br>
+
+필드를 삭제할 때는 <code>ctx.\_source.remove('fieldName')</code> 와 같은 문법을 사용합니다.
+
+```
+POST /movie_script/_doc/1/_update
+{
+  "script": "ctx._source.movieList.remove('Suits')"
+}
+```
+
+<br>
+<br>
