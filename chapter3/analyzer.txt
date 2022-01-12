@@ -1,0 +1,109 @@
+---------------------------------------------------------------------------
+# 색인과 검색 시 분석기를 각각 설정
+---------------------------------------------------------------------------
+PUT movie_analyzer
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1,
+    "analysis": {
+      "analyzer": {
+        "movie_lower_test_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        },
+        "movie_stop_test_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "movie_stop_test_analyzer",
+        "search_analyzer": "movie_lower_test_analyzer"
+      }
+    }
+  }
+}
+---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 전처리 필터
+---------------------------------------------------------------------------
+PUT /movie_html_analyzer
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "html_strip_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "char_filter": [
+            "html_strip_char_filter"
+          ]
+        }
+      },
+      "char_filter": {
+        "html_strip_char_filter": {
+          "type": "html_strip",
+          "escaped_tags": ["b"]
+        }
+      }
+    }
+  }
+}
+---------------------------------------------------------------------------

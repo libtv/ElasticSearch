@@ -1,0 +1,32 @@
+---------------------------------------------------------------------------
+# cardinality 사용법
+---------------------------------------------------------------------------
+POST /apache-web-log/_search
+{
+  "size": 0,
+  "query": {
+    "constant_score": {
+      "filter": {
+        "match": {
+          "geoip.country_name": {
+            "query": "United States",
+            "minimum_should_match": 2
+          }
+        }
+      }
+    }
+  },
+  "aggs": {
+    "us_city_name": {
+      "terms": {
+        "field": "geoip.city_name.keyword"
+      }
+    },
+    "us_cadinality": {
+      "cardinality": {
+        "field": "geoip.city_name.keyword"
+      }
+    }
+  }
+}
+---------------------------------------------------------------------------

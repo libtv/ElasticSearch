@@ -1,11 +1,15 @@
 ---------------------------------------------------------------------------
-# 인덱스 검색
+# terms 사용법
 ---------------------------------------------------------------------------
-POST /movie/_search
+POST /apache-web-log/_search
 {
-  "query": {
-    "term": {
-      "typeNm": "장편"
+  "size": 0,
+  "aggs": {
+    "request_count_by_contry": {
+      "terms": {
+        "field": "geoip.country_name.keyword",
+        "size": 100
+      }
     }
   }
 }
