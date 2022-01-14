@@ -147,7 +147,7 @@ POST /movie_term_completion/_search
 ```
 
 <br>
-부분일최되는 데이터까지 검색하게 하려면 prefix 만으로는 해결되지 않는다는 사실을 알 수 있습니다. completion 을 사용하려면 필드에 데이터를 넣을 때 검색이 가능해지는 형태로 가공해서 넣어야 합니다. 예를 들어 부분일치를 하고 싶다면 부분일치가 되어 나왔으면 하는 부분을 분리해서 배열형태로 만들어야 합니다.
+부분일치되는 데이터까지 검색하게 하려면 prefix 만으로는 해결되지 않는다는 사실을 알 수 있습니다. completion 을 사용하려면 필드에 데이터를 넣을 때 검색이 가능해지는 형태로 가공해서 넣어야 합니다. 예를 들어 부분일치를 하고 싶다면 부분일치가 되어 나왔으면 하는 부분을 분리해서 배열형태로 만들어야 합니다.
 
 ```
 POST movie_term_completion/_doc/1
@@ -187,3 +187,209 @@ POST movie_term_completion/_doc/5
 ```
 
 <br>
+
+## 맞춤법 검사기
+
+<p>사용자들은 영문이나 한글을 검색어로 입력할 때 글자를 잘못 입력할 수가 있습니다. 이러한 경우 원래 의도했던 검색 결과가 나오지 않을 것입니다. 이러한 경우 어떻게 검색어를 교정하는 지 알아보도록 하겠습니다.</p>
+
+<br>
+
+### Term Suggester API 를 이용한 오타 교정
+
+먼저 한글을 자소별로 분류하기 위한 플러그인을 설치하도록 합니다.
+
+```
+https://github.com/libtv/elastic-kor-parser-plugin
+```
+
+<br> 
+설치한 후 아래와 같이 인덱스를 생성합니다.
+
+```
+PUT /company_koreng
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "kor2engAnalyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_kor2eng"
+          ]
+        },
+        "eng2korAnalyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_eng2kor"
+          ]
+        },
+        "korean_spell_check": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_jamo"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+<br> 
+매핑 설정을 하는데, copy_to 를 이용하여 suggest 필드에 저장하는 구조로 만들어보도록 하겠습니다.
+
+```
+PUT /company_spellchecker/_mapping
+{
+  "properties": {
+    "title": {
+      "type": "keyword",
+      "copy_to": ["suggest"]
+    },
+    "suggest": {
+      "type": "completion",
+      "analyzer": "korean_spell_check"
+    }
+  }
+}
+```
+
+<br> 
+오타 교정 데이터를 색인해보겠습니다. 아래 자동완성을 통해 제공될 데이터를 색인할 목적으로 데이터를 하나 추가합니다.
+
+```
+PUT /company_spellchecker/_doc/1
+{
+  "title": "삼성전자"
+}
+```
+
+<br> 
+오타 교정 API를 요청합니다. 사용자가 샴성전자로 입력한 검색어가 오타라고 가정하고, 교정한 검색 결과를 제공하기 위해 Term Suggest API를 사용해 질의합니다.
+
+```
+POST /company_spellchecker/_search
+{
+  "suggest": {
+    "my-suggest": {
+      "text": "샴성전자",
+      "term": {
+        "field": "suggest"
+      }
+    }
+  }
+}
+```
+
+<br>
+
+### 한영/영한 오타 교정
+
+아래와 같이 인덱스를 생성합니다.
+
+```
+PUT /company_koreng
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "kor2engAnalyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_kor2eng"
+          ]
+        },
+        "eng2korAnalyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_eng2kor"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+<br> 
+매핑 설정을 하는데, copy_to 를 이용하여 필드에 저장하는 구조로 만들어보도록 하겠습니다.
+
+```
+PUT /company_koreng/_mapping
+{
+  "properties": {
+    "title": {
+      "type": "keyword",
+      "copy_to": ["kor2eng_suggest", "eng2kor_suggest", "spell_suggest"]
+    },
+    "kor2eng_suggest": {
+      "type": "text",
+      "analyzer": "standard",
+      "search_analyzer": "kor2engAnalyzer"
+    },
+    "eng2kor_suggest": {
+      "type": "text",
+      "analyzer": "standard",
+      "search_analyzer": "eng2korAnalyzer"
+    },
+    "spell_suggest": {
+      "type": "text",
+      "analyzer": "standard",
+      "search_analyzer": "korean_spell_check"
+    }
+  }
+}
+```
+
+<br> 
+오타 교정 데이터를 색인해보겠습니다. 아래 자동완성을 통해 제공될 데이터를 색인할 목적으로 데이터를 추가합니다.
+
+```
+PUT /company_koreng/_doc/1
+{
+  "name": "iphone"
+}
+
+PUT /company_koreng/_doc/2
+{
+  "name": "삼성전자"
+}
+```
+
+<br> 
+오타 교정 API를 요청합니다.
+
+```
+POST /company_koreng/_search
+{
+  "query": {
+    "match": {
+      "eng2kor_suggest": "tkatjdwjswk"
+    }
+  }
+}
+
+POST /company_koreng/_search
+{
+  "query": {
+    "match": {
+      "kor2eng_suggest": "ㅑㅔㅗㅐㅜㄷ"
+    }
+  }
+}
+```
