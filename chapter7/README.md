@@ -326,7 +326,8 @@ PUT /company_koreng
 }
 ```
 
-<br> 
+<br>
+
 매핑 설정을 하는데, copy_to 를 이용하여 필드에 저장하는 구조로 만들어보도록 하겠습니다.
 
 ```
@@ -389,6 +390,123 @@ POST /company_koreng/_search
   "query": {
     "match": {
       "kor2eng_suggest": "ㅑㅔㅗㅐㅜㄷ"
+    }
+  }
+}
+```
+
+<br>
+
+## 한글 키워드 자동완성
+
+아래와 같이 인덱스를 생성합니다.
+
+```
+PUT /ac_test
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "jamo_index_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": [
+            "elastic_jamo_filter",
+            "lowercase",
+            "trim",
+            "edge_ngra_filter_front"
+          ]
+        },
+        "jamo_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": [
+            "elastic_jamo_filter",
+            "lowercase",
+            "trim"
+          ]
+        }
+      },
+      "filter": {
+        "elastic_jamo_filter": {
+          "type": "elastic_jamo"
+        },
+        "edge_ngra_filter_front": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "front"
+        }
+      }
+    }
+  }
+}
+```
+
+<br>
+
+아래와 같이 매핑을 설정하겠습니다.
+
+```
+PUT /ac_test/_mapping
+{
+  "properties": {
+    "item": {
+      "type": "keyword",
+      "copy_to": "itemJamo",
+      "boost": "30"
+    },
+    "itemJamo": {
+      "type": "text",
+      "analyzer": "jamo_index_analyzer",
+      "search_analyzer": "jamo_search_analyzer",
+      "boost": "10"
+    }
+  }
+}
+```
+
+<br>
+
+데이터를 삽입하여 검색을 해보도록 하겠습니다. 데이터는 아래와 같이 삽입합니다.
+
+<br>
+
+```
+POST /ac_test/_doc/1
+{
+  "item": "신혼"
+}
+
+POST /ac_test/_doc/2
+{
+  "item": "신혼가전"
+}
+
+POST /ac_test/_doc/3
+{
+  "item": "신혼가전특별전"
+}
+```
+
+<br>
+
+아래 검색을 해보도록 하겠습니다.
+
+```
+POST /ac_test/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "term": {
+            "itemJamo": {
+              "value": "ㅅㅣㄴㅎ"
+            }
+          }
+        }
+      ]
     }
   }
 }
