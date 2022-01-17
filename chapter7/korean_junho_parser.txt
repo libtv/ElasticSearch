@@ -1,0 +1,220 @@
+---------------------------------------------------------------------------
+# 인덱스 생성
+---------------------------------------------------------------------------
+PUT /ac_test3
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "korean_spell_check_front": {
+          "type": "custom",
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_jamo"
+          ]
+        },
+        "korean_spell_check_back": {
+          "type": "custom",
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": [
+            "trim",
+            "lowercase",
+            "elastic_jamo"
+          ]
+        }
+      },
+      
+      "filter": {
+        "edge_ngram_filter_back": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "back"
+        },
+        "edge_ngram_filter_front": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "front"
+        }
+      },
+      "tokenizer": {
+        "edge_ngram_tokenizer": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50"
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 매핑 설정
+---------------------------------------------------------------------------
+PUT /ac_test3/_mapping
+{
+  "properties": {
+    "title": {
+      "type": "keyword",
+      "copy_to": ["title_front", "title_back"]
+    },
+    "title_front": {
+      "type": "text",
+      "analyzer": "korean_spell_check_front",
+      "search_analyzer": "korean_spell_check_front"
+    },
+    "title_back": {
+      "type": "text",
+      "analyzer": "korean_spell_check_back",
+      "search_analyzer": "korean_spell_check_back"
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 값 저장
+---------------------------------------------------------------------------
+POST /ac_test3/_doc/1
+{
+  "title": "삼성전자"
+}
+
+POST /ac_test3/_doc/2
+{
+  "title": "삼성전자포레버"
+}
+
+POST /ac_test3/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 오타교정 및 자동완성
+---------------------------------------------------------------------------
+POST /ac_test3/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "title_front": {
+              "fuzziness": 3,
+              "query": "심성"
+            }
+          }
+        },
+        {
+          "match": {
+            "title_back": {
+              "fuzziness": 3,
+              "query": "심성"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
