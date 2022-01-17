@@ -397,7 +397,181 @@ POST /company_koreng/_search
 
 <br>
 
-## 한글 키워드 자동완성
+## 한글 키워드 자동완성 (1)
+
+아래와 같이 인덱스를 생성합니다.
+
+```
+PUT /ac_test2
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "edge_ngram_analyzer": {
+          "type": "custom",
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": [
+            "lowercase",
+            "trim",
+            "edge_ngram_filter_front"
+          ]
+        },
+        "edge_ngram_analyzer_back": {
+          "type": "custom",
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": [
+            "lowercase",
+            "trim",
+            "edge_ngram_filter_back"
+          ]
+        }
+      },
+      "tokenizer": {
+        "edge_ngram_tokenizer": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50"
+        }
+      },
+      "filter": {
+        "edge_ngram_filter_front": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "front"
+        },
+        "edge_ngram_filter_back": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "back"
+        }
+      }
+    }
+  }
+}
+```
+
+<br>
+
+아래와 같이 매핑을 설정하겠습니다.
+
+```
+PUT /ac_test2/_mapping
+{
+  "properties": {
+    "item": {
+      "type": "keyword",
+      "copy_to": ["itemEdgeNgram", "itemEdgeNgramBack"]
+    },
+    "itemEdgeNgram": {
+      "type": "text",
+      "analyzer": "edge_ngram_analyzer",
+      "search_analyzer": "edge_ngram_analyzer"
+    },
+    "itemEdgeNgramBack": {
+      "type": "text",
+      "analyzer": "edge_ngram_analyzer_back",
+      "search_analyzer": "edge_ngram_analyzer_back"
+    }
+  }
+}
+```
+
+<br>
+
+데이터를 삽입하여 검색을 해보도록 하겠습니다. 데이터는 아래와 같이 삽입합니다.
+
+<br>
+
+```
+POST /ac_test2/_doc/1
+{
+  "item": "신혼"
+}
+
+POST /ac_test2/_doc/2
+{
+  "item": "신혼가전"
+}
+
+POST /ac_test2/_doc/3
+{
+  "item": "신혼가전특별전"
+}
+```
+
+<br>
+
+아래 검색을 해보도록 하겠습니다.
+
+```
+POST /ac_test2/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "term": {
+            "item": {
+              "value": "신혼"
+            }
+          }
+        },
+        {
+          "term": {
+            "itemEdgeNgram": {
+              "value": "신혼"
+            }
+          }
+        },
+        {
+          "term": {
+            "itemEdgeNgramBack": {
+              "value": "신혼"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+POST /ac_test2/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "term": {
+            "item": {
+              "value": "가전"
+            }
+          }
+        },
+        {
+          "term": {
+            "itemEdgeNgram": {
+              "value": "가전"
+            }
+          }
+        },
+                {
+          "term": {
+            "itemEdgeNgramBack": {
+              "value": "가전"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+<br>
+
+## 한글 키워드 자동완성 (2) - 자모로 완성하기
 
 아래와 같이 인덱스를 생성합니다.
 

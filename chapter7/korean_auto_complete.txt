@@ -1,0 +1,287 @@
+---------------------------------------------------------------------------
+# 인덱스 생성
+---------------------------------------------------------------------------
+PUT /ac_test2
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "edge_ngram_analyzer": {
+          "type": "custom",
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": [
+            "lowercase",
+            "trim",
+            "edge_ngram_filter_front"
+          ]
+        },
+        "edge_ngram_analyzer_back": {
+          "type": "custom",
+          "tokenizer": "edge_ngram_tokenizer",
+          "filter": [
+            "lowercase",
+            "trim",
+            "edge_ngram_filter_back"
+          ]
+        }
+      },
+      "tokenizer": {
+        "edge_ngram_tokenizer": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50"
+        }
+      },
+      "filter": {
+        "edge_ngram_filter_front": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "front"
+        },
+        "edge_ngram_filter_back": {
+          "type": "edgeNGram",
+          "min_gram": "1",
+          "max_gram": "50",
+          "side": "back"
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 매핑 설정
+---------------------------------------------------------------------------
+PUT /ac_test2/_mapping
+{
+  "properties": {
+    "item": {
+      "type": "keyword",
+      "copy_to": ["itemEdgeNgram", "itemEdgeNgramBack"]
+    },
+    "itemEdgeNgram": {
+      "type": "text",
+      "analyzer": "edge_ngram_analyzer",
+      "search_analyzer": "edge_ngram_analyzer"
+    },
+    "itemEdgeNgramBack": {
+      "type": "text",
+      "analyzer": "edge_ngram_analyzer_back",
+      "search_analyzer": "edge_ngram_analyzer_back"
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 데이터 생성
+---------------------------------------------------------------------------
+POST /ac_test2/_doc/1
+{
+  "item": "신혼"
+}
+
+POST /ac_test2/_doc/2
+{
+  "item": "신혼가전"
+}
+
+POST /ac_test2/_doc/3
+{
+  "item": "신혼가전특별전"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 검색
+---------------------------------------------------------------------------
+POST /ac_test2/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "term": {
+            "item": {
+              "value": "신혼"
+            }
+          }
+        },
+        {
+          "term": {
+            "itemEdgeNgram": {
+              "value": "신혼"
+            }
+          }
+        },
+        {
+          "term": {
+            "itemEdgeNgramBack": {
+              "value": "신혼"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+POST /ac_test2/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "term": {
+            "item": {
+              "value": "가전"
+            }
+          }
+        },
+        {
+          "term": {
+            "itemEdgeNgram": {
+              "value": "가전"
+            }
+          }
+        },
+                {
+          "term": {
+            "itemEdgeNgramBack": {
+              "value": "가전"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------
+# 인덱스 삭제
+---------------------------------------------------------------------------
+DELETE /ac_test2
