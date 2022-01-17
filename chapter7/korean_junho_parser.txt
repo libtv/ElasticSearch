@@ -12,7 +12,8 @@ PUT /ac_test3
           "filter": [
             "trim",
             "lowercase",
-            "elastic_jamo"
+            "elastic_jamo",
+            "edge_ngram_filter_front"
           ]
         },
         "korean_spell_check_back": {
@@ -21,11 +22,20 @@ PUT /ac_test3
           "filter": [
             "trim",
             "lowercase",
+            "elastic_jamo",
+            "edge_ngram_filter_back"
+          ]
+        },
+        "my_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "trim",
+            "lowercase",
             "elastic_jamo"
           ]
         }
       },
-      
       "filter": {
         "edge_ngram_filter_back": {
           "type": "edgeNGram",
@@ -95,12 +105,12 @@ PUT /ac_test3/_mapping
     "title_front": {
       "type": "text",
       "analyzer": "korean_spell_check_front",
-      "search_analyzer": "korean_spell_check_front"
+      "search_analyzer": "my_search_analyzer"
     },
     "title_back": {
       "type": "text",
       "analyzer": "korean_spell_check_back",
-      "search_analyzer": "korean_spell_check_back"
+      "search_analyzer": "my_search_analyzer"
     }
   }
 }
@@ -201,7 +211,7 @@ POST /ac_test3/_search
         {
           "match": {
             "title_front": {
-              "fuzziness": 3,
+              "fuzziness": 1,
               "query": "심성"
             }
           }
@@ -209,8 +219,34 @@ POST /ac_test3/_search
         {
           "match": {
             "title_back": {
-              "fuzziness": 3,
+              "fuzziness": 1,
               "query": "심성"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+POST /ac_test3/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "title_front": {
+              "fuzziness": 1,
+              "query": "죽어랏"
+            }
+          }
+        },
+        {
+          "match": {
+            "title_back": {
+              "fuzziness": 1,
+              "query": "죽어랏"
             }
           }
         }
